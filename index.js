@@ -206,7 +206,7 @@ function addLog(message, type, network = currentNetwork) {
   else if (type === "warning") coloredMessage = `{bright-yellow-fg}${message}{/bright-yellow-fg}`;
   else if (type === "debug") coloredMessage = `{bright-magenta-fg}${message}{/bright-magenta-fg}`;
 
-  transactionLogs.push(`{bright-cyan-fg}[{/bright-cyan-fg} {bold}{grey-fg}${timestamp}{/grey-fg}{/bold} {bright-cyan-fg}]{/bright-cyan-fg} {bold}[${network}] ${coloredMessage}{/bold}`);
+  transactionLogs.push(`{bright-cyan-fg}[{/bright-cyan-fg} {bold}{grey-fg}${timestamp}{/grey-fg}{/bold} {bright-cyan-fg}]{/bright-cyan-fg} {bold}[{grey-fg}${network}{/grey-fg}]{/bold}{bold} ${coloredMessage}{/bold}`);
   updateLogs();
 }
 
