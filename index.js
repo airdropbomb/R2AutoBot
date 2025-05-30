@@ -282,7 +282,7 @@ let nextNonceBSC = null;
 let nextNonceMonad = null;
 let nextNonceBaseSepolia = null;
 let swapDirection = {
-  "Sepolia": true,          
+  "Sepolia": true,
   "Arbitrum Sepolia": true,
   "Plume": true,
   "BSC": true,
@@ -395,7 +395,7 @@ async function addTransactionToQueue(transactionFunction, description = "Transak
       let normalizedNetwork = network;
       if (!network) {
         normalizedNetwork = currentNetwork;
-      }      
+      }
       if (normalizedNetwork === "Sepolia" || normalizedNetwork === "Sepolia Testnet") {
         config = SEPOLIA_CONFIG;
         normalizedNetwork = "Sepolia";
@@ -534,7 +534,7 @@ async function claimAllFaucetsWithDelay(network, { isDailyClaim = false } = {}) 
     addLog("Auto Daily Claim Faucet selesai, menunggu 24 jam untuk Looping.", "swap", network);
   } else {
     addLog("Auto Claim Faucet selesai.", "success", network);
-  }  claimFaucetSubMenu.setItems(getClaimFaucetSubMenuItems()); 
+  }  claimFaucetSubMenu.setItems(getClaimFaucetSubMenuItems());
   safeRender();
 }
 
@@ -547,7 +547,7 @@ function startAutoDailyClaim() {
     if (!claimRunning) {
       claimAllFaucetsWithDelay();
     }
-  },24 * 60 * 60 * 1000 + 2 * 60 * 1000);  
+  },10000);
   claimAllFaucetsWithDelay();
   addLog("Auto Daily Claim Faucet All Network dimulai.", "system");
   claimFaucetSubMenu.setItems(getClaimFaucetSubMenuItems());
@@ -1694,7 +1694,7 @@ async function autoSwapR2usdUsdc(network) {
   const ranges = randomAmountRanges["SWAP_R2USD_USDC"];
   let amount;
   let txPromise;
-  let currentDirection = swapDirection[network]; 
+  let currentDirection = swapDirection[network];
 
   if (currentDirection) {
     amount = getRandomNumber(ranges["USDC"].min, ranges["USDC"].max).toFixed(6);
@@ -1723,7 +1723,7 @@ async function autoSwapR2usdUsdc(network) {
           );
         }
       } else {
-        throw error; 
+        throw error;
       }
     }
   } else {
@@ -2071,8 +2071,8 @@ async function runAutoAction(actionFunction, actionName, network) {
               (nonce, wallet, provider, config) => autoAddLpR2usdSr2usd(amount, nonce, wallet, provider, config),
           `${actionName} ${amount} ${actionName.includes("USDC & R2USD") ? "USDC" : "R2USD"}`,
           normalizedNetwork
-        );  
-        await updateWalletData(normalizedNetwork);       
+        );
+        await updateWalletData(normalizedNetwork);
         addLog(`${actionName}: ${actionName.includes("Stake") ? "Staking" : "Penambahan LP"} ${amount} ${actionName.includes("USDC & R2USD") ? "USDC" : "R2USD"} selesai.`, "success", normalizedNetwork);
       } catch (error) {
         addLog(`${actionName}: Gagal - ${error.message}`, "error", normalizedNetwork);
@@ -2841,9 +2841,9 @@ sepoliaManualSwapSubMenu.on("select", (item) => {
         await addTransactionToQueue(
           (nonce, wallet, provider, config) => swapUsdcToR2usd(amount, nonce, wallet, provider, config),
           `Manual Swap ${amount} USDC to R2USD`,
-          "Sepolia" 
+          "Sepolia"
         );
-        await updateWalletData("Sepolia"); 
+        await updateWalletData("Sepolia");
         addLog(`Manual Swap: Swap ${amount} USDC ke R2USD selesai.`, "success", currentNetwork);
       } catch (error) {
         addLog(`Manual Swap: Gagal - ${error.message}`, "error", currentNetwork);
@@ -2868,9 +2868,9 @@ sepoliaManualSwapSubMenu.on("select", (item) => {
         await addTransactionToQueue(
           (nonce, wallet, provider, config) => swapR2usdToUsdc(amount, nonce, wallet, provider, config),
           `Manual Swap ${amount} R2USD to USDC`,
-          "Sepolia" 
+          "Sepolia"
         );
-        await updateWalletData("Sepolia"); 
+        await updateWalletData("Sepolia");
         addLog(`Manual Swap: Swap ${amount} R2USD ke USDC selesai.`, "success", currentNetwork);
       } catch (error) {
         addLog(`Manual Swap: Gagal - ${error.message}`, "error", currentNetwork);
@@ -2906,7 +2906,7 @@ arbitrumSepoliaManualSwapSubMenu.on("select", (item) => {
         await addTransactionToQueue(
           (nonce, wallet, provider, config) => swapUsdcToR2usd(amount, nonce, wallet, provider, config),
           `Manual Swap ${amount} USDC to R2USD`,
-          "Arbitrum Sepolia" 
+          "Arbitrum Sepolia"
         );
         await updateWalletData("Arbitrum Sepolia");
         addLog(`Manual Swap: Swap ${amount} USDC ke R2USD selesai.`, "success", currentNetwork);
@@ -2933,7 +2933,7 @@ arbitrumSepoliaManualSwapSubMenu.on("select", (item) => {
         await addTransactionToQueue(
           (nonce, wallet, provider, config) => swapR2usdToUsdc(amount, nonce, wallet, provider, config),
           `Manual Swap ${amount} R2USD to USDC`,
-          "Arbitrum Sepolia" 
+          "Arbitrum Sepolia"
         );
         await updateWalletData("Arbitrum Sepolia");
         addLog(`Manual Swap: Swap ${amount} R2USD ke USDC selesai.`, "success", currentNetwork);
@@ -2998,9 +2998,9 @@ plumeManualSwapSubMenu.on("select", (item) => {
         await addTransactionToQueue(
           (nonce, wallet, provider, config) => swapR2usdToUsdc(amount, nonce, wallet, provider, config),
           `Manual Swap ${amount} R2USD to USDC`,
-          "Plume" 
+          "Plume"
         );
-        await updateWalletData("Plume"); 
+        await updateWalletData("Plume");
         addLog(`Manual Swap: Swap ${amount} R2USD ke USDC selesai.`, "success", currentNetwork);
       } catch (error) {
         addLog(`Manual Swap: Gagal - ${error.message}`, "error", currentNetwork);
