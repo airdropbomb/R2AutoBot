@@ -377,7 +377,7 @@ async function waitWithCancel(delay, type, network) {
   ]);
 }
 
-async function addTransactionToQueue(transactionFunction, description = "Transaksi", network) {
+async function addTransactionToQueue(transactionFunction, description = "Transaction", network) {
   const transactionId = ++transactionIdCounter;
   transactionQueueList.push({
     id: transactionId,
@@ -385,7 +385,7 @@ async function addTransactionToQueue(transactionFunction, description = "Transak
     timestamp: new Date().toLocaleTimeString(),
     status: "queued"
   });
-  addLog(`Transaksi [${transactionId}] ditambahkan ke antrean: ${description}`, "system", network || currentNetwork);
+  addLog(`Transaction [${transactionId}] added to queue: ${description}`, "system", network || currentNetwork);
   updateQueueDisplay();
 
   transactionQueue = transactionQueue.then(async () => {
@@ -415,7 +415,7 @@ async function addTransactionToQueue(transactionFunction, description = "Transak
         config = BASE_SEPOLIA_CONFIG;
         normalizedNetwork = "Base Sepolia";
       } else {
-        throw new Error(`Jaringan tidak dikenal: ${normalizedNetwork || 'tidak diberikan'}`);
+        throw new Error(`Unknown network: ${normalizedNetwork || 'not provided'}`);
       }
 
       const localProvider = new ethers.JsonRpcProvider(config.RPC_URL);
@@ -456,7 +456,7 @@ async function addTransactionToQueue(transactionFunction, description = "Transak
 
       const tx = await transactionFunction(nextNonce, localWallet, localProvider, config);
       const txHash = tx.hash;
-      addLog(`Transaksi Dikirim. Hash: ${getShortHash(txHash)}`, "warning", normalizedNetwork);
+      addLog(`Transaction Sent. Hash: ${getShortHash(txHash)}`, "warning", normalizedNetwork);
       const receipt = await tx.wait();
       if (normalizedNetwork === "Sepolia") nextNonceSepolia++;
       else if (normalizedNetwork === "Arbitrum Sepolia") nextNonceArbitrum++;
@@ -467,19 +467,19 @@ async function addTransactionToQueue(transactionFunction, description = "Transak
 
       if (receipt.status === 1) {
         updateTransactionStatus(transactionId, "completed");
-        addLog(`Transaksi Selesai. Hash: ${getShortHash(receipt.transactionHash || txHash)}`, "success", normalizedNetwork);
+        addLog(`Transaction Completed. Hash: ${getShortHash(receipt.transactionHash || txHash)}`, "success", normalizedNetwork);
       } else {
         updateTransactionStatus(transactionId, "failed");
-        addLog(`Transaksi [${transactionId}] gagal: Transaksi ditolak oleh kontrak.`, "error", normalizedNetwork);
+        addLog(`Transaction [${transactionId}] failed: Transaction rejected by contract.`, "error", normalizedNetwork);
       }
       return { receipt, txHash, tx };
     } catch (error) {
       updateTransactionStatus(transactionId, "error");
       let errorMessage = error.message;
       if (error.code === "CALL_EXCEPTION") {
-        errorMessage = `Transaksi ditolak oleh kontrak: ${error.reason || "Alasan tidak diketahui"}`;
+        errorMessage = `Transaction rejected by contract: ${error.reason || "Unknown reason"}`;
       }
-      addLog(`Transaksi [${transactionId}] gagal: ${errorMessage}`, "error", network || currentNetwork);
+      addLog(`Transaction [${transactionId}] failed: ${errorMessage}`, "error", network || currentNetwork);
       if (error.message.includes("nonce has already been used")) {
         if (normalizedNetwork === "Sepolia") nextNonceSepolia++;
         else if (normalizedNetwork === "Arbitrum Sepolia") nextNonceArbitrum++;
@@ -514,16 +514,16 @@ async function claimAllFaucetsWithDelay(network, { isDailyClaim = false } = {}) 
   const networks = Object.keys(NETWORK_CHANNEL_IDS);
   for (const network of networks) {
     if (claimCancelled) {
-      addLog("Proses claim faucet dihentikan.", "warning", network);
+      addLog("Faucet claim process stopped.", "warning", network);
       break;
     }
     await claimFaucet(network);
     if (!claimCancelled && network !== networks[networks.length - 1]) {
       const delay = Math.floor(Math.random() * (10000 - 5000 + 1)) + 5000;
-      addLog(`Menunggu ${delay / 1000} Detik sebelum klaim berikutnya...`, "swap", network);
+      addLog(`Waiting ${delay / 1000} seconds before the next claim...`, "swap", network);
       const delayCompleted = await delayWithCancel(delay);
       if (!delayCompleted) {
-        addLog("Proses claim faucet dihentikan selama jeda.", "warning", network);
+        addLog("Faucet claim process stopped during pause.", "warning", network);
         break;
       }
     }
@@ -531,25 +531,26 @@ async function claimAllFaucetsWithDelay(network, { isDailyClaim = false } = {}) 
 
   claimRunning = false;
   if (isDailyClaim) {
-    addLog("Auto Daily Claim Faucet selesai, menunggu 24 jam untuk Looping.", "swap", network);
+    addLog("Auto Daily Faucet Claim completed, waiting 24 hours for looping.", "swap", network);
   } else {
-    addLog("Auto Claim Faucet selesai.", "success", network);
-  }  claimFaucetSubMenu.setItems(getClaimFaucetSubMenuItems());
+    addLog("Auto Faucet Claim completed.", "success", network);
+  }
+  claimFaucetSubMenu.setItems(getClaimFaucetSubMenuItems());
   safeRender();
 }
 
 function startAutoDailyClaim() {
   if (dailyClaimInterval) {
-    addLog("Auto Daily Claim Faucet All Network sudah berjalan.", "warning");
+    addLog("Auto Daily Faucet Claim for All Networks is already running.", "warning");
     return;
   }
   dailyClaimInterval = setInterval(() => {
     if (!claimRunning) {
       claimAllFaucetsWithDelay();
     }
-  },24 * 60 * 60 * 1000 + 2 * 60 * 1000); 
+  }, 24 * 60 * 60 * 1000 + 2 * 60 * 1000);
   claimAllFaucetsWithDelay();
-  addLog("Auto Daily Claim Faucet All Network dimulai.", "system");
+  addLog("Auto Daily Faucet Claim for All Networks started.", "system");
   claimFaucetSubMenu.setItems(getClaimFaucetSubMenuItems());
   safeRender();
 }
@@ -558,11 +559,11 @@ function stopAutoDailyClaim(network) {
   if (dailyClaimInterval) {
     clearInterval(dailyClaimInterval);
     dailyClaimInterval = null;
-    addLog("Auto Daily Claim Faucet All Network dihentikan.", "system", network);
+    addLog("Auto Daily Faucet Claim for All Networks stopped.", "system", network);
   }
   if (claimRunning) {
     claimCancelled = true;
-    addLog("Proses claim faucet dihentikan.", "system", network);
+    addLog("Faucet claim process stopped.", "system", network);
   }
   claimFaucetSubMenu.setItems(getClaimFaucetSubMenuItems());
   safeRender();
@@ -571,33 +572,37 @@ function stopAutoDailyClaim(network) {
 async function claimFaucet(network) {
   try {
     if (!DISCORD_TOKEN) {
-      throw new Error("DISCORD_TOKEN tidak ditemukan di .env. Silakan tambahkan token Discord Anda.");
+      throw new Error("DISCORD_TOKEN not found in .env. Please add your Discord token.");
     }
     if (!wallet_address) {
-      throw new Error("Wallet address tidak tersedia. Cek Private Key Anda");
+      throw new Error("Wallet address is not available. Check your Private Key.");
     }
     const channelId = NETWORK_CHANNEL_IDS[network];
     if (!channelId) {
-      throw new Error(`Jaringan ${network} tidak didukung untuk claim faucet.`);
+      throw new Error(`Network ${network} is not supported for faucet claim.`);
     }
 
     const userId = await fetchMyUserId();
     const address = wallet_address;
 
     const payload = {
-      type: 2,
+      type: type,
       application_id: APP_ID,
       guild_id: GUILD_ID,
       channel_id: channelId,
       session_id: uuid(),
+      safeRender,
       data: {
         version: COMMAND_VERSION,
         id: COMMAND_ID,
-        name: "faucet",
-        type: 1,
-        options: [{ type: 3, name: "address", value: address }]
-      },
-      nonce: Date.now().toString()
+        name: data,
+        type: type,
+        name: data,
+        options: [{ type: APP_ID, name: APP_ID, name=" address", value: address }],
+      options: data,
+      type: Date.now(),
+      .toString(),
+      payload:
     };
     const form = new FormData();
     form.append("payload_json", JSON.stringify(payload));
@@ -647,7 +652,7 @@ function removeTransactionFromQueue(id) {
 }
 
 function getTransactionQueueContent() {
-  if (transactionQueueList.length === 0) return "Tidak ada transaksi dalam antrean.";
+  if (transactionQueueList.length === 0) return "No transactions in the queue.";
   return transactionQueueList
     .map(tx => `ID: ${tx.id} | ${tx.description} | ${tx.status} | ${tx.timestamp}`)
     .join("\n");
@@ -658,7 +663,7 @@ let queueUpdateInterval = null;
 
 function showTransactionQueueMenu() {
   const container = blessed.box({
-    label: " Antrian Transaksi ",
+    label: " Transaction Queue ",
     top: "10%",
     left: "center",
     width: "80%",
@@ -682,7 +687,7 @@ function showTransactionQueueMenu() {
     scrollbar: { ch: " ", inverse: true, style: { bg: "blue" } }
   });
   const exitButton = blessed.button({
-    content: " [Keluar] ",
+    content: " [Exit] ",
     bottom: 0,
     left: "center",
     shrink: true,
@@ -693,7 +698,7 @@ function showTransactionQueueMenu() {
     interactive: true
   });
   exitButton.on("press", () => {
-    addLog("Keluar Dari Menu Antrian Transaksi.", "system", currentNetwork);
+    addLog("Exiting Transaction Queue Menu.", "system", currentNetwork);
     clearInterval(queueUpdateInterval);
     container.destroy();
     queueMenuBox = null;
@@ -702,7 +707,7 @@ function showTransactionQueueMenu() {
     screen.render();
   });
   container.key(["a", "s", "d"], () => {
-    addLog("Keluar Dari Menu Antrian Transaksi.", "system", currentNetwork);
+    addLog("Exiting Transaction Queue Menu.", "system", currentNetwork);
     clearInterval(queueUpdateInterval);
     container.destroy();
     queueMenuBox = null;
@@ -752,7 +757,7 @@ const headerBox = blessed.box({
 });
 
 figlet.text("NT EXHAUST".toUpperCase(), { font: "ANSI Shadow" }, (err, data) => {
-  if (err) headerBox.setContent("{center}{bold}NT EXHAUST{/bold}{/center}");
+  if (err) headerBox.setContent("{center}{bold}ADB NODE{/bold}{/center}");
   else headerBox.setContent(`{center}{bold}{bright-cyan-fg}${data}{/bright-cyan-fg}{/bold}{/center}`);
   safeRender();
 });
@@ -820,7 +825,7 @@ function getMainMenItems() {
     "Monad Network",
     "Base Sepolia Network",
     "Claim Faucet",
-    "Antrian Transaksi",
+    "Transaction Queue",
     "Clear Transaction Logs",
     "Refresh",
     "Exit"
@@ -1244,9 +1249,9 @@ function updateWelcomeBox() {
   const content =
     `{center}{bold}{bright-red-fg}[:: R2 :: AUTO :: BOT ::]{/bright-red-fg}{/bold}{/center}\n\n` +
     `{center}{bold}{bright-yellow-fg}Version : ${botVersion}{/bright-yellow-fg}{/bold}{/center}\n` +
-    `{center}{bold}{bright-cyan-fg}➥ Join Telegram : t.me/NTExhaust{/bright-cyan-fg}{/bold}{/center}\n` +
-    `{center}{bold}{bright-cyan-fg}➥ Subscribe : Youtube.com/@NTExhaust{/bright-cyan-fg}{/bold}{/center}\n` +
-    `{center}{bold}{grey-fg}Donate : saweria.co/vinsenzo{/grey-fg}{/bold}{/center}\n`;
+    `{center}{bold}{bright-cyan-fg}➥ Join Telegram : t.me/airdropbombnode{/bright-cyan-fg}{/bold}{/center}\n` +
+    `{center}{bold}{bright-cyan-fg}➥ Subscribe : Youtube.com/@airdropbombnode{/bright-cyan-fg}{/bold}{/center}\n` +
+    `{center}{bold}{grey-fg}➥ Subscribe : https://x.com/airdropbombnode{/grey-fg}{/bold}{/center}\n`;
 
   welcomeBox.setContent(content);
   safeRender();
@@ -1395,7 +1400,7 @@ async function updateWalletData(network) {
       config = BASE_SEPOLIA_CONFIG;
       normalizedNetwork = "Base Sepolia";
     } else {
-      throw new Error(`Jaringan tidak dikenal: ${network || 'tidak diberikan'}`);
+      throw new Error(`Unknown network: ${network || 'not provided'}`);
     }
 
     const localProvider = new ethers.JsonRpcProvider(config.RPC_URL, undefined, { timeout: 60000 });
@@ -1455,7 +1460,7 @@ async function updateWalletData(network) {
     addLog("Wallet Information Updated !!", "system", normalizedNetwork);
   } catch (error) {
     if (error.code === "TIMEOUT") {
-      addLog(`Timeout saat mencoba menghubungi RPC ${config.RPC_URL}. Coba lagi nanti.`, "error", network || currentNetwork);
+      addLog(`Timeout while trying to connect RPC ${config.RPC_URL}. Coba lagi nanti.`, "error", network || currentNetwork);
     } else {
       addLog(`Gagal mengambil data wallet: ${error.message}`, "error", network || currentNetwork);
     }
